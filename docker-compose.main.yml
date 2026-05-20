@@ -12,7 +12,7 @@ services:
       MS_RESERVAS_URL: http://ms-reservas:8081
       MS_PAGOS_URL: http://ms-pagos:8083
       JWT_SECRET: main_jwt_secret_key_reservas_2026_12345
-      CORS_ORIGINS: http://localhost:5175
+      CORS_ORIGINS: http://reserva-app.myddns.me,http://localhost:5175
     ports:
       - "8000:8080"
     networks:
