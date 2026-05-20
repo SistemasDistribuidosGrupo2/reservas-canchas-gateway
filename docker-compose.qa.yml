@@ -1,0 +1,25 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.qa
+    image: reservas-gateway:qa
+    container_name: reservas-qa-gateway
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      MS_AUTH_URL: http://ms-auth:8082
+      MS_RESERVAS_URL: http://ms-reservas:8081
+      JWT_SECRET: qa_jwt_secret_key_reservas_2026_12345
+      CORS_ORIGINS: http://localhost:5174
+    ports:
+      - "8001:8080"
+    networks:
+      reservas-qa-net:
+        aliases:
+          - gateway
+
+networks:
+  reservas-qa-net:
+    external: true
+    name: reservas-qa-net

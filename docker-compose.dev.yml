@@ -1,0 +1,25 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: reservas-gateway:dev
+    container_name: reservas-dev-gateway
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      MS_AUTH_URL: http://ms-auth:8082
+      MS_RESERVAS_URL: http://ms-reservas:8081
+      JWT_SECRET: dev_jwt_secret_key_reservas_2026_12345
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "8002:8080"
+    networks:
+      reservas-dev-net:
+        aliases:
+          - gateway
+
+networks:
+  reservas-dev-net:
+    external: true
+    name: reservas-dev-net
