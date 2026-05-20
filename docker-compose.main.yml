@@ -1,0 +1,25 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.main
+    image: reservas-gateway:main
+    container_name: reservas-main-gateway
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      MS_AUTH_URL: http://ms-auth:8082
+      MS_RESERVAS_URL: http://ms-reservas:8081
+      JWT_SECRET: main_jwt_secret_key_reservas_2026_12345
+      CORS_ORIGINS: http://localhost:5175
+    ports:
+      - "8000:8080"
+    networks:
+      reservas-main-net:
+        aliases:
+          - gateway
+
+networks:
+  reservas-main-net:
+    external: true
+    name: reservas-main-net
