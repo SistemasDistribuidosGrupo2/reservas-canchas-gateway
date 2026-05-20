@@ -10,6 +10,7 @@ services:
       SERVER_PORT: 8080
       MS_AUTH_URL: http://ms-auth:8082
       MS_RESERVAS_URL: http://ms-reservas:8081
+      MS_PAGOS_URL: http://ms-pagos:8083
       JWT_SECRET: qa_jwt_secret_key_reservas_2026_12345
       CORS_ORIGINS: http://localhost:5174
     ports:
