@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5176"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175"})
 @RequiredArgsConstructor
 @Slf4j
 public class GatewayController {
@@ -26,6 +26,9 @@ public class GatewayController {
 
     @Value("${ms-auth.base-url:http://localhost:8082}")
     private String msAuthUrl;
+
+    @Value("${ms-pagos.base-url:http://localhost:8083}")
+    private String msPagosUrl;
 
     @PostMapping("/auth/register")
     public Mono<ResponseEntity<String>> register(@RequestBody String body) {
@@ -42,24 +45,31 @@ public class GatewayController {
         return proxyPost(msAuthUrl + "/auth/login", body);
     }
 
+    @GetMapping("/usuarios")
+    public Mono<ResponseEntity<String>> listarUsuarios(ServerWebExchange exchange) {
+        return proxyGetWithAuth(msAuthUrl + "/usuarios", exchange);
+    }
+
+    @GetMapping("/usuarios/{id}")
+    public Mono<ResponseEntity<String>> obtenerUsuario(@PathVariable String id, ServerWebExchange exchange) {
+        return proxyGetWithAuth(msAuthUrl + "/usuarios/" + id, exchange);
+    }
+
+    @PutMapping("/usuarios/{id}/rol")
+    public Mono<ResponseEntity<String>> actualizarRolUsuario(@PathVariable String id,
+                                                             @RequestBody String body,
+                                                             ServerWebExchange exchange) {
+        return proxyPutWithAuth(msAuthUrl + "/usuarios/" + id + "/rol", body, exchange);
+    }
+
     @GetMapping("/reservas")
     public Mono<ResponseEntity<String>> listarReservas(ServerWebExchange exchange) {
-        return webClient.get()
-                .uri(msReservasUrl + "/reservas")
-                .headers(h -> copyAuthHeaders(exchange, h))
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return proxyGetWithAuth(msReservasUrl + "/reservas", exchange);
     }
 
     @GetMapping("/reservas/{id}")
     public Mono<ResponseEntity<String>> obtenerReserva(@PathVariable Long id, ServerWebExchange exchange) {
-        return webClient.get()
-                .uri(msReservasUrl + "/reservas/{id}", id)
-                .headers(h -> copyAuthHeaders(exchange, h))
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return proxyGetWithAuth(msReservasUrl + "/reservas/" + id, exchange);
     }
 
     @PostMapping("/reservas")
@@ -71,51 +81,27 @@ public class GatewayController {
     public Mono<ResponseEntity<String>> actualizarReserva(@PathVariable Long id,
                                                           @RequestBody String body,
                                                           ServerWebExchange exchange) {
-        return webClient.put()
-                .uri(msReservasUrl + "/reservas/{id}", id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .headers(h -> copyAuthHeaders(exchange, h))
-                .bodyValue(body)
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return proxyPutWithAuth(msReservasUrl + "/reservas/" + id, body, exchange);
     }
 
     @DeleteMapping("/reservas/{id}")
     public Mono<ResponseEntity<String>> eliminarReserva(@PathVariable Long id, ServerWebExchange exchange) {
-        return webClient.delete()
-                .uri(msReservasUrl + "/reservas/{id}", id)
-                .headers(h -> copyAuthHeaders(exchange, h))
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return proxyDeleteWithAuth(msReservasUrl + "/reservas/" + id, exchange);
     }
 
     @GetMapping("/canchas")
     public Mono<ResponseEntity<String>> listarCanchas() {
-        return webClient.get()
-                .uri(msReservasUrl + "/canchas")
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return webClient.get().uri(msReservasUrl + "/canchas").retrieve().toEntity(String.class).onErrorResume(this::handleError);
     }
 
     @GetMapping("/canchas/activas")
     public Mono<ResponseEntity<String>> listarCanchasActivas() {
-        return webClient.get()
-                .uri(msReservasUrl + "/canchas/activas")
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return webClient.get().uri(msReservasUrl + "/canchas/activas").retrieve().toEntity(String.class).onErrorResume(this::handleError);
     }
 
     @GetMapping("/canchas/{id}")
     public Mono<ResponseEntity<String>> obtenerCancha(@PathVariable Long id) {
-        return webClient.get()
-                .uri(msReservasUrl + "/canchas/{id}", id)
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return webClient.get().uri(msReservasUrl + "/canchas/" + id).retrieve().toEntity(String.class).onErrorResume(this::handleError);
     }
 
     @PostMapping("/canchas")
@@ -127,45 +113,64 @@ public class GatewayController {
     public Mono<ResponseEntity<String>> actualizarCancha(@PathVariable Long id,
                                                          @RequestBody String body,
                                                          ServerWebExchange exchange) {
-        return webClient.put()
-                .uri(msReservasUrl + "/canchas/{id}", id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .headers(h -> copyAuthHeaders(exchange, h))
-                .bodyValue(body)
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return proxyPutWithAuth(msReservasUrl + "/canchas/" + id, body, exchange);
     }
 
     @DeleteMapping("/canchas/{id}")
     public Mono<ResponseEntity<String>> eliminarCancha(@PathVariable Long id, ServerWebExchange exchange) {
-        return webClient.delete()
-                .uri(msReservasUrl + "/canchas/{id}", id)
+        return proxyDeleteWithAuth(msReservasUrl + "/canchas/" + id, exchange);
+    }
+
+    @GetMapping("/pagos")
+    public Mono<ResponseEntity<String>> listarPagos(ServerWebExchange exchange) {
+        return proxyGetWithAuth(msPagosUrl + "/pagos", exchange);
+    }
+
+    @GetMapping("/pagos/{id}")
+    public Mono<ResponseEntity<String>> obtenerPago(@PathVariable String id, ServerWebExchange exchange) {
+        return proxyGetWithAuth(msPagosUrl + "/pagos/" + id, exchange);
+    }
+
+    @GetMapping("/pagos/reserva/{idReserva}")
+    public Mono<ResponseEntity<String>> listarPagosPorReserva(@PathVariable Long idReserva, ServerWebExchange exchange) {
+        return proxyGetWithAuth(msPagosUrl + "/pagos/reserva/" + idReserva, exchange);
+    }
+
+    @PostMapping("/pagos/simular")
+    public Mono<ResponseEntity<String>> simularPago(@RequestBody String body, ServerWebExchange exchange) {
+        return proxyPostWithAuth(msPagosUrl + "/pagos/simular", body, exchange);
+    }
+
+    @PatchMapping("/pagos/{id}/estado")
+    public Mono<ResponseEntity<String>> cambiarEstadoPago(@PathVariable String id,
+                                                          @RequestParam String estado,
+                                                          ServerWebExchange exchange) {
+        return webClient.patch()
+                .uri(msPagosUrl + "/pagos/" + id + "/estado?estado=" + estado)
                 .headers(h -> copyAuthHeaders(exchange, h))
                 .retrieve()
                 .toEntity(String.class)
                 .onErrorResume(this::handleError);
+    }
+
+    private Mono<ResponseEntity<String>> proxyGetWithAuth(String uri, ServerWebExchange exchange) {
+        return webClient.get().uri(uri).headers(h -> copyAuthHeaders(exchange, h)).retrieve().toEntity(String.class).onErrorResume(this::handleError);
     }
 
     private Mono<ResponseEntity<String>> proxyPost(String uri, String body) {
-        return webClient.post()
-                .uri(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(body)
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return webClient.post().uri(uri).contentType(MediaType.APPLICATION_JSON).bodyValue(body).retrieve().toEntity(String.class).onErrorResume(this::handleError);
     }
 
     private Mono<ResponseEntity<String>> proxyPostWithAuth(String uri, String body, ServerWebExchange exchange) {
-        return webClient.post()
-                .uri(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .headers(h -> copyAuthHeaders(exchange, h))
-                .bodyValue(body)
-                .retrieve()
-                .toEntity(String.class)
-                .onErrorResume(this::handleError);
+        return webClient.post().uri(uri).contentType(MediaType.APPLICATION_JSON).headers(h -> copyAuthHeaders(exchange, h)).bodyValue(body).retrieve().toEntity(String.class).onErrorResume(this::handleError);
+    }
+
+    private Mono<ResponseEntity<String>> proxyPutWithAuth(String uri, String body, ServerWebExchange exchange) {
+        return webClient.put().uri(uri).contentType(MediaType.APPLICATION_JSON).headers(h -> copyAuthHeaders(exchange, h)).bodyValue(body).retrieve().toEntity(String.class).onErrorResume(this::handleError);
+    }
+
+    private Mono<ResponseEntity<String>> proxyDeleteWithAuth(String uri, ServerWebExchange exchange) {
+        return webClient.delete().uri(uri).headers(h -> copyAuthHeaders(exchange, h)).retrieve().toEntity(String.class).onErrorResume(this::handleError);
     }
 
     private void copyAuthHeaders(ServerWebExchange exchange, HttpHeaders headers) {
@@ -182,18 +187,9 @@ public class GatewayController {
     private Mono<ResponseEntity<String>> handleError(Throwable ex) {
         if (ex instanceof WebClientResponseException wex) {
             log.error("Downstream error: {} {}", wex.getStatusCode(), wex.getResponseBodyAsString());
-            return Mono.just(
-                    ResponseEntity.status(wex.getStatusCode())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .body(wex.getResponseBodyAsString())
-            );
+            return Mono.just(ResponseEntity.status(wex.getStatusCode()).contentType(MediaType.APPLICATION_JSON).body(wex.getResponseBodyAsString()));
         }
-
         log.error("Unexpected gateway error", ex);
-        return Mono.just(
-                ResponseEntity.internalServerError()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body("{\"message\":\"Error contacting service\"}")
-        );
+        return Mono.just(ResponseEntity.internalServerError().contentType(MediaType.APPLICATION_JSON).body("{\"message\":\"Error contacting service\"}"));
     }
 }
