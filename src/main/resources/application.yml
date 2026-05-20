@@ -13,8 +13,11 @@ ms-reservas:
 ms-auth:
   base-url: ${MS_AUTH_URL:http://localhost:8082}
 
+ms-pagos:
+  base-url: ${MS_PAGOS_URL:http://localhost:8083}
+
 jwt:
   secret: ${JWT_SECRET:miClaveSecretaSuperSeguraParaDesarrollo2026}
 
 cors:
-  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5176}  
+  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:5175}
